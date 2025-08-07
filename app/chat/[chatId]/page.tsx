@@ -1,7 +1,8 @@
 import { readAllChats, readChat } from '@util/chat-store';
 import Link from 'next/link';
 import Chat from './chat';
-
+import { DataStreamHandler } from '@/components/data-stream-handler';
+  
 export default async function Page(props: {
   params: Promise<{ chatId: string }>;
 }) {
@@ -24,6 +25,7 @@ export default async function Page(props: {
         ))}
       </ul>
       <Chat chatData={chatData} resume={chatData.activeStreamId !== null} />;
+      <DataStreamHandler id={chatId} />
     </div>
   );
 }

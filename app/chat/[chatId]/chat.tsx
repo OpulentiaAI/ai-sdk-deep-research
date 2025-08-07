@@ -1,7 +1,7 @@
 'use client';
 
 import { invalidateRouterCache } from '@/app/actions';
-import { MyUIMessage } from '@/util/chat-schema';
+import { ChatMessage } from '@/lib/ai/types';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { useEffect, useRef } from 'react';
@@ -13,13 +13,13 @@ export default function ChatComponent({
   isNewChat = false,
   resume = false,
 }: {
-  chatData: { id: string; messages: MyUIMessage[] };
+  chatData: { id: string; messages: ChatMessage[] };
   isNewChat?: boolean;
   resume?: boolean;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { status, sendMessage, messages, regenerate } = useChat({
+  const { status, sendMessage, messages } = useChat({
     id: chatData.id,
     messages: chatData.messages,
     resume,
@@ -33,7 +33,7 @@ export default function ChatComponent({
                 trigger: 'regenerate-message',
                 id,
                 messageId,
-              },
+              },  
             };
 
           case 'submit-message':
@@ -69,14 +69,11 @@ export default function ChatComponent({
   }, []);
 
   return (
-    <div className="flex flex-col py-24 mx-auto w-full max-w-md stretch">
+    <div className="flex flex-col py-24 mx-auto w-full max-w-3xl stretch">
       {messages.map(message => (
         <Message
           key={message.id}
           message={message}
-          regenerate={regenerate}
-          sendMessage={sendMessage}
-          status={status}
         />
       ))}
       <ChatInput

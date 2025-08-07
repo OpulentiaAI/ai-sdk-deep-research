@@ -1,4 +1,6 @@
+import { ArtifactProvider } from '@/components/use-artifact';
 import './globals.css';
+import { DataStreamProvider } from '@/components/data-stream-provider';
 
 export const metadata = {
   title: 'AI SDK - Next.js OpenAI Examples',
@@ -12,7 +14,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <DataStreamProvider>
+          <ArtifactProvider>{children}</ArtifactProvider>
+        </DataStreamProvider>
+      </body>
     </html>
   );
 }

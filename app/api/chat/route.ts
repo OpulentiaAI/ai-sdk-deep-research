@@ -1,7 +1,9 @@
-import { MyUIMessage } from '@/util/chat-schema';
+import { systemPrompt } from '@/lib/ai/prompts';
+import { getTools } from '@/lib/ai/tools/tools';
+import { ChatMessage } from '@/lib/ai/types';
 import { openai } from '@ai-sdk/openai';
 import { readChat, saveChat } from '@util/chat-store';
-import { convertToModelMessages, generateId, streamText } from 'ai';
+import { convertToModelMessages, createUIMessageStream, generateId, JsonToSseTransformStream, stepCountIs, streamText } from 'ai';
 import { after } from 'next/server';
 import { createResumableStreamContext, type ResumableStreamContext } from 'resumable-stream';
 
@@ -29,82 +31,116 @@ export function getStreamContext() {
 
 export async function POST(req: Request) {
   const {
-    message,
+    message: prevMessages,
     id,
     trigger,
-    messageId,
+    messageId: userMessageId,
   }: {
-    message: MyUIMessage | undefined;
+    message: ChatMessage | undefined;
     id: string;
     trigger: 'submit-message' | 'regenerate-message';
     messageId: string | undefined;
   } = await req.json();
 
   const chat = await readChat(id);
-  let messages: MyUIMessage[] = chat.messages;
+  let currentMessages: ChatMessage[] = chat.messages;
 
   if (trigger === 'submit-message') {
-    if (messageId != null) {
-      const messageIndex = messages.findIndex(m => m.id === messageId);
+    if (userMessageId != null) {
+      const messageIndex = currentMessages.findIndex(m => m.id === userMessageId);
 
       if (messageIndex === -1) {
-        throw new Error(`message ${messageId} not found`);
+        throw new Error(`message ${userMessageId} not found`);
       }
 
-      messages = messages.slice(0, messageIndex);
-      messages.push(message!);
+      currentMessages = currentMessages.slice(0, messageIndex);
+      currentMessages.push(prevMessages!);
     } else {
-      messages = [...messages, message!];
+      currentMessages = [...currentMessages, prevMessages!];
     }
   } else if (trigger === 'regenerate-message') {
     const messageIndex =
-      messageId == null
-        ? messages.length - 1
-        : messages.findIndex(message => message.id === messageId);
+    userMessageId == null
+        ? currentMessages.length - 1
+        : currentMessages.findIndex(message => message.id === userMessageId);
 
     if (messageIndex === -1) {
-      throw new Error(`message ${messageId} not found`);
+      throw new Error(`message ${userMessageId} not found`);
     }
 
     // set the messages to the message before the assistant message
-    messages = messages.slice(
+    currentMessages = currentMessages.slice(
       0,
-      messages[messageIndex].role === 'assistant'
+      currentMessages[messageIndex].role === 'assistant'
         ? messageIndex
         : messageIndex + 1,
     );
   }
 
+const messageId = generateId();
+
+  const streamId = generateId();
+
+
   // save the user message
-  saveChat({ id, messages, activeStreamId: null });
-
+  saveChat({ id, messages: currentMessages, activeStreamId: null });
+  const stream = createUIMessageStream<ChatMessage>({
+    execute: ({ writer: dataStream }) => {
   const result = streamText({
-    model: openai('gpt-4o-mini'),
-    messages: convertToModelMessages(messages),
-  });
+    model: openai('gpt-4o'),
+    system: systemPrompt(),
+    messages: convertToModelMessages(currentMessages),
+    tools: getTools({
+      dataStream,
+      messageId,
+      contextForLLM: convertToModelMessages(currentMessages),
+    }),
+    stopWhen: [
+      stepCountIs(5),
+      ({ steps }) => {
+        return steps.some((step) => {
+          const toolResults = step.content;
+          // Don't stop if the tool result is a clarifying question
+          return toolResults.some(
+            (toolResult) =>
+              toolResult.type === 'tool-result' &&
+              toolResult.toolName === 'deepResearch' &&
+              (toolResult.output as any).format === 'report',
+          );
+        });
+      },
+    ],
+    });
 
-  return result.toUIMessageStreamResponse({
-    originalMessages: messages,
-    generateMessageId: generateId,
-    messageMetadata: ({ part }) => {
-      if (part.type === 'start') {
-        return { createdAt: Date.now() };
-      }
-    },
-    onFinish: ({ messages }) => {
-      saveChat({ id, messages, activeStreamId: null });
-    },
-    async consumeSseStream({ stream }) {
-      const streamId = generateId();
-      const streamContext = getStreamContext();
+    result.consumeStream();
 
-      if (streamContext) {
-        // send the sse stream into a resumable stream sink as well:
-        await streamContext.createNewResumableStream(streamId, () => stream);
-        
-        // update the chat with the streamId
-        saveChat({ id, activeStreamId: streamId });
-      }
-    },
-  });
+  dataStream.merge(
+    result.toUIMessageStream({
+      sendReasoning: true,
+    }))
+
+    
+
+  },
+  onFinish: ({ messages }) => {
+    console.log("onFinish assistant messages"); 
+    console.dir(messages, { depth: null });
+    saveChat({ id, messages: [...currentMessages, ...messages], activeStreamId: null });
+  },
+  generateId: () => messageId,
+
+})
+const streamContext = getStreamContext();
+
+if (streamContext) {
+  console.log('RESPONSE > POST /api/chat: Returning resumable stream');
+  return new Response(
+    await streamContext.resumableStream(streamId, () =>
+      stream.pipeThrough(new JsonToSseTransformStream()),
+    )
+  );
+} else {
+  return new Response(stream.pipeThrough(new JsonToSseTransformStream()));
+}
+  
 }

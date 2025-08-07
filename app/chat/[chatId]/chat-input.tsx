@@ -13,6 +13,7 @@ export default function ChatInput({
 
   return (
     <form
+      className="w-full max-w-md mx-auto"
       onSubmit={e => {
         e.preventDefault();
         if (text.trim() === '') return;
@@ -22,7 +23,7 @@ export default function ChatInput({
     >
       <input
         ref={inputRef}
-        className="fixed bottom-0 w-full max-w-md p-2 mb-8 border border-gray-300 rounded shadow-xl"
+        className="fixed bottom-0 w-full max-w-md mx-auto p-2 mb-8 border border-gray-300 rounded shadow-xl"
         placeholder="Say something..."
         disabled={status !== 'ready'}
         value={text}

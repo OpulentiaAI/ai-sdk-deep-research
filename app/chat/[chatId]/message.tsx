@@ -1,22 +1,15 @@
-import { MyUIMessage } from '@/util/chat-schema';
-import { ChatStatus } from 'ai';
+import { ResearchUpdateAnnotations } from '@/components/message-annotations';
+import { ChatMessage } from '@/lib/ai/types';
+import { Artifact, artifactDefinitions } from '@/components/artifact';
+import type { ArtifactKind } from '@/lib/artifacts/artifact-kind';
+import { Markdown } from '@/components/markdown';
 
 export default function Message({
   message,
-  status,
-  regenerate,
-  sendMessage,
+
 }: {
-  status: ChatStatus;
-  message: MyUIMessage;
-  regenerate: ({ messageId }: { messageId: string }) => void;
-  sendMessage: ({
-    text,
-    messageId,
-  }: {
-    text: string;
-    messageId?: string;
-  }) => void;
+  message: ChatMessage;
+ 
 }) {
   const date = message.metadata?.createdAt
     ? new Date(message.metadata.createdAt).toLocaleString()
@@ -30,31 +23,25 @@ export default function Message({
     >
       <div className="mb-1 text-xs text-gray-500">{date}</div>
       <div className="font-semibold">{isUser ? 'User:' : 'AI:'}</div>
+      
+      <ResearchUpdateAnnotations
+          parts={message.parts}
+          key={`research-update-annotations-${message.id}`}
+        />
+
       <div>
-        {message.parts
-          .map(part => (part.type === 'text' ? part.text : ''))
-          .join('')}
+        <Markdown>
+          {message.parts
+            .map(part => (part.type === 'text' ? part.text : ''))
+            .join('')}
+        </Markdown>
       </div>
-      {message.role === 'user' && (
-        <>
-          <button
-            onClick={() => regenerate({ messageId: message.id })}
-            className="px-3 py-1 mt-2 text-sm transition-colors bg-gray-200 rounded-md hover:bg-gray-300"
-            disabled={status !== 'ready'}
-          >
-            Regenerate
-          </button>
-          <button
-            onClick={() =>
-              sendMessage({ text: 'Hello', messageId: message.id })
-            }
-            className="px-3 py-1 mt-2 text-sm transition-colors bg-gray-200 rounded-md hover:bg-gray-300"
-            disabled={status !== 'ready'}
-          >
-            Replace with Hello
-          </button>
-        </>
-      )}
+      
+      {/* Display artifact if present */}
+      <Artifact
+    parts = {message.parts}
+      />
+      
     </div>
   );
 }

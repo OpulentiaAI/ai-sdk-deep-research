@@ -1,0 +1,92 @@
+import type { DeepResearchConfig } from './configuration';
+import { runDeepResearcher } from './deep-researcher';
+import { tool, type ModelMessage } from 'ai';
+import { z } from 'zod';
+import type { StreamWriter } from '../../types';
+
+export const deepResearch = ({
+  dataStream,
+  messageId,
+  messages,
+}: {
+  dataStream: StreamWriter;
+  messageId: string;
+  messages: ModelMessage[];
+}) =>
+  tool({
+    description: `Conducts deep, autonomous research based on a conversation history. It automatically clarifies the user's intent if the request is ambiguous, breaks down the query into parallel research tasks, scours multiple web sources for information, and then synthesizes the findings into a comprehensive, well-structured report with citations. This is best for complex questions that require in-depth analysis and a detailed answer, not just a simple search. 
+    
+    
+Important:
+- If a message with role tool and toolname "deepResearch" is found in the conversation history, and this tool has an output with format "clarifying_questions", you must call this tool again to continue the research process.
+- If research is successful, a report will be created by this tool and displayed to the user. No need to repeat it in your answer.
+    
+Use for:
+- Start a research or to continue a research process
+- Perform deep research (also autonomous research, deep search, or similar aliases)
+- Use again if this tool was previously used, produced a clarifying question, and the user has now responded
+`,
+    inputSchema: z.object({}),
+    execute: async () => {
+      const smallConfig: DeepResearchConfig = {
+        // Use faster, cheaper models for demo
+        research_model: 'openai/gpt-4o-mini',
+        compression_model: 'openai/gpt-4o-mini',
+        final_report_model: 'openai/gpt-4o',
+        summarization_model: 'openai/gpt-4o-mini',
+        status_update_model: 'openai/gpt-4o-mini',
+
+        // Limit iterations for faster demo
+        max_researcher_iterations: 1,
+        max_concurrent_research_units: 2, // num concurrent research agents
+
+        // Search configuration
+        search_api: 'tavily',
+        search_api_max_queries: 2,
+
+        // Disable clarification for automated demo
+        allow_clarification: true,
+
+        // Token limits
+        research_model_max_tokens: 4000,
+        compression_model_max_tokens: 4000,
+        final_report_model_max_tokens: 6000,
+        summarization_model_max_tokens: 4000,
+        status_update_model_max_tokens: 4000,
+
+        // Other settings
+        max_structured_output_retries: 3,
+      };
+
+      try {
+        const researchResult = await runDeepResearcher(
+          {
+            requestId: messageId,
+            messages: messages,
+          },
+          smallConfig,
+          dataStream,
+        );
+
+        switch (researchResult.type) {
+          case 'report':
+            return {
+              ...researchResult.data,
+              format: 'report' as const,
+            };
+
+          case 'clarifying_question':
+            return {
+              answer: researchResult.data,
+              format: 'clarifying_questions' as const,
+            };
+        }
+      } catch (error) {
+        console.error('Deep research error:', error);
+        return {
+          answer: `Deep research failed with error: ${error instanceof Error ? error.message : String(error)}`,
+          format: 'problem' as const,
+        };
+      }
+    },
+  });
