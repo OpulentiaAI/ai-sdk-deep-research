@@ -1,5 +1,7 @@
 ## AI SDK Deep Research (Minimal Example)
 
+https://github.com/user-attachments/assets/82f5dab6-2408-4165-8aa3-124a00032a50
+
 A minimal, end‑to‑end deep‑research agent implemented with AI SDK and Next.js. It mirrors the architecture of Open Deep Research while replacing LangChain/Graph with AI SDK’s streaming, tool calling, and structured outputs. Includes a small UI that surfaces intermediate research updates in real time.
 
 - **Architecture reference**: inspired by Open Deep Research [link](https://github.com/langchain-ai/open_deep_research)
