@@ -11,6 +11,11 @@ A minimal, end‑to‑end deep‑research agent implemented with AI SDK and Next
 - **AI SDK tools + streaming** wired into a Next.js route for SSR and resumable streams
 - **UI components** that render intermediate updates (queries, results, thoughts, writing) in the chat
 
+## Architecture from Open Deep Research
+
+<img width="1388" height="298" alt="deep-research-architecture" src="https://github.com/user-attachments/assets/ae2568b1-8efe-4cbb-af55-b3db4927e465" />
+
+
 ## Quickstart
 
 ### Requirements
