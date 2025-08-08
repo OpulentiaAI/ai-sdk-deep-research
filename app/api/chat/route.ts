@@ -87,7 +87,7 @@ const messageId = generateId();
   const stream = createUIMessageStream<ChatMessage>({
     execute: ({ writer: dataStream }) => {
   const result = streamText({
-    model: openai('gpt-4o'),
+    model: openai('gpt-5-mini'),
     system: systemPrompt(),
     messages: convertToModelMessages(currentMessages),
     tools: getTools({
@@ -100,6 +100,7 @@ const messageId = generateId();
       ({ steps }) => {
         return steps.some((step) => {
           const toolResults = step.content;
+
           // Don't stop if the tool result is a clarifying question
           return toolResults.some(
             (toolResult) =>

@@ -127,37 +127,79 @@ export function getNotesFromToolCalls(messages: ModelMessage[]): string[] {
 
 
 
-const modelDefinitions = [
+const modelDefinitions: {id: ModelId, object: string, owned_by: string, name: string, description: string, context_window: number, max_tokens: number, pricing: {input: string, output: string}}[] = [
   {
-    id: 'openai/gpt-4o',
+    id: 'gpt-5',
     object: 'model',
     owned_by: 'openai',
-    name: 'GPT-4o',
+    name: 'GPT-5',
     description:
-      'GPT-4o from OpenAI has broad general knowledge and domain expertise allowing it to follow complex instructions in natural language and solve difficult problems accurately. It matches GPT-4 Turbo performance with a faster and cheaper API.',
-    context_window: 128000,
-    max_tokens: 1024,
+      "GPT-5 is OpenAI's flagship language model that excels at complex reasoning, broad real-world knowledge, code-intensive, and multi-step agentic tasks.",
+    context_window: 400000,
+    max_tokens: 128000,
     pricing: {
-      input: '0.0000025',
+      input: '0.00000125',
       output: '0.00001',
     },
   },
   {
-    id: 'openai/gpt-4o-mini',
+    id: 'gpt-5-mini',
     object: 'model',
     owned_by: 'openai',
-    name: 'GPT-4o mini',
+    name: 'GPT-5 mini',
     description:
-      'GPT-4o mini from OpenAI is their most advanced and cost-efficient small model. It is multi-modal (accepting text or image inputs and outputting text) and has higher intelligence than gpt-3.5-turbo but is just as fast.',
-    context_window: 128000,
-    max_tokens: 1024,
+      'GPT-5 mini is a cost optimized model that excels at reasoning/chat tasks. It offers an optimal balance between speed, cost, and capability.',
+    context_window: 400000,
+    max_tokens: 128000,
     pricing: {
-      input: '0.00000015',
-      output: '0.0000006',
+      input: '0.00000025',
+      output: '0.000002',
     },
-  }, 
-]
-
+  },
+  {
+    id: 'gpt-5-nano',
+    object: 'model',
+    owned_by: 'openai',
+    name: 'GPT-5 nano',
+    description:
+      'GPT-5 nano is a high throughput model that excels at simple instruction or classification tasks.',
+    context_window: 400000,
+    max_tokens: 128000,
+    pricing: {
+      input: '0.00000005',
+      output: '0.0000004',
+    },
+  },
+    {
+      id: 'gpt-4o',
+      object: 'model',
+      owned_by: 'openai',
+      name: 'GPT-4o',
+      description:
+        'GPT-4o from OpenAI has broad general knowledge and domain expertise allowing it to follow complex instructions in natural language and solve difficult problems accurately. It matches GPT-4 Turbo performance with a faster and cheaper API.',
+      context_window: 128000,
+      max_tokens: 1024,
+      pricing: {
+        input: '0.0000025',
+        output: '0.00001',
+      },
+    },
+    {
+      id: 'gpt-4o-mini',
+      object: 'model',
+      owned_by: 'openai',
+      name: 'GPT-4o mini',
+      description:
+        'GPT-4o mini from OpenAI is their most advanced and cost-efficient small model. It is multi-modal (accepting text or image inputs and outputting text) and has higher intelligence than gpt-3.5-turbo but is just as fast.',
+      context_window: 128000,
+      max_tokens: 1024,
+      pricing: {
+        input: '0.00000015',
+        output: '0.0000006',
+      },
+    }, 
+  ]
+  
 export function getModelContextWindow(modelId: ModelId): number {
   const model = modelDefinitions.find((model) => model.id === modelId);
   if (!model) throw new Error(`Model not found: ${modelId}`);

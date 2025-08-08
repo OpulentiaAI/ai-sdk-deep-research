@@ -7,6 +7,12 @@ import { DefaultChatTransport } from 'ai';
 import { useEffect, useRef } from 'react';
 import ChatInput from './chat-input';
 import Message from './message';
+import { useDataStream } from '@/components/data-stream-provider';
+import {
+  Conversation,
+  ConversationContent,
+  ConversationScrollButton,
+} from '@/components/ai-elements/conversation';
 
 export default function ChatComponent({
   chatData,
@@ -18,6 +24,8 @@ export default function ChatComponent({
   resume?: boolean;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const { setDataStream } = useDataStream();
 
   const { status, sendMessage, messages } = useChat({
     id: chatData.id,
@@ -49,6 +57,9 @@ export default function ChatComponent({
         }
       },
     }),
+    onData(dataPart) {
+      setDataStream((ds) => (ds ? [...ds, dataPart] : []));
+    },
     onFinish() {
       // for new chats, the router cache needs to be invalidated so
       // navigation to the previous page triggers SSR correctly
@@ -70,19 +81,22 @@ export default function ChatComponent({
 
   return (
     <div className="flex flex-col py-24 mx-auto w-full max-w-3xl stretch">
-      {messages.map(message => (
-        <Message
-          key={message.id}
-          message={message}
-        />
-      ))}
+      <Conversation>
+        <ConversationContent>
+          {messages.map(message => (
+            <Message key={message.id} message={message} />
+          ))}
+        </ConversationContent>
+        <ConversationScrollButton />
+      </Conversation>
+
       <ChatInput
         status={status}
         onSubmit={text => {
           sendMessage({ text, metadata: { createdAt: Date.now() } });
 
           if (isNewChat) {
-            window.history.pushState(null, '', `/chat/${chatData.id}`);
+            window.history.replaceState(null, '', `/chat/${chatData.id}`);
           }
         }}
         inputRef={inputRef}

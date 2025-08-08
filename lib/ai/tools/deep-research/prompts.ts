@@ -64,6 +64,11 @@ Today's date is ${date}.
 You will return a single research question that will be used to guide the research.
 
 Guidelines:
+0. Length & Style
+- Default to concise: keep it to 1-2 short paragraphs (about 120-200 words) focused on the core question and explicit constraints.
+- Only expand beyond this if the user explicitly requested a comprehensive brief or if multiple distinct constraints would be lost. If you expand, keep it under ~400 words and avoid filler.
+- Do not include sections, enumerated outlines, or step-by-step plans. Do not include meta commentary. Return a single brief, readable block.
+
 1. Maximize Specificity and Detail
 - Include all known user preferences and explicitly list key attributes or dimensions to consider.
 - It is important that all details from the user are included in the instructions.
