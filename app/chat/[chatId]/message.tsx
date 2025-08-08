@@ -12,9 +12,9 @@ export default function Message({ message }: { message: ChatMessage }) {
   return (
     <div className="my-2">
       <AIMessage from={message.role} className="w-full">
-        <MessageContent>
+        <MessageContent className="group-[.is-assistant]:w-full ">
           {date ? (
-            <div className="mb-1 text-xs text-gray-500 w-full">{date}</div>
+            <div className="mb-1 text-xs text-gray-500">{date}</div>
           ) : null}
 
           <ResearchUpdateAnnotations
