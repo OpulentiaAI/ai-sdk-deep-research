@@ -25,7 +25,7 @@ export type WebSearchResponse = {
 };
 
 // Initialize search providers
-const tvly = tavily({ apiKey: process.env.TAVILY_API_KEY as string });
+const tvly = process.env.TAVILY_API_KEY ? tavily({ apiKey: process.env.TAVILY_API_KEY }) : null;
 const firecrawl = new FirecrawlApp({
   apiKey: process.env.FIRECRAWL_API_KEY ?? '',
 });
@@ -45,6 +45,9 @@ export async function webSearchStep({
     let results: WebSearchResult[] = [];
 
     if (providerOptions.provider === 'tavily') {
+      if (!tvly) {
+        throw new Error('Tavily API key not configured');
+      }
       const response = await tvly.search(query, {
         searchDepth: providerOptions.searchDepth || 'basic',
         maxResults,

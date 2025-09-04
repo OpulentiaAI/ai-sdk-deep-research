@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ArrowRight, Square, Sparkles, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { SimpleModelSelector } from './SimpleModelSelector';
+import { ModelSelector } from './model-selector';
 
 export type AdaptedPromptFormProps = {
   status: string;
@@ -88,10 +88,9 @@ export function AdaptedPromptForm({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div>
-                    <SimpleModelSelector
-                      value={selectedModel}
-                      onValueChange={setSelectedModel}
-                      disabled={disabled}
+                    <ModelSelector
+                      selectedModel={selectedModel}
+                      handleSelectModel={setSelectedModel}
                     />
                   </div>
                 </TooltipTrigger>
