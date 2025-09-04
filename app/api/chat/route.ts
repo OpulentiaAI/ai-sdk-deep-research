@@ -30,6 +30,17 @@ export function getStreamContext() {
 }
 
 export async function POST(req: Request) {
+  // Check for required environment variables
+  if (!process.env.OPENAI_API_KEY) {
+    console.error('Missing OPENAI_API_KEY environment variable');
+    return new Response(
+      JSON.stringify({ 
+        error: 'OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.' 
+      }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
   const {
     message: prevMessages,
     id,

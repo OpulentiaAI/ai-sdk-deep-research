@@ -52,6 +52,19 @@ pnpm dev # or npm run dev / yarn dev
 
 Open `http://localhost:3000` and ask a research question.
 
+### Deployment (Vercel)
+
+When deploying to Vercel, make sure to set the environment variables in your Vercel project settings:
+
+1. Go to your Vercel project dashboard
+2. Navigate to Settings > Environment Variables
+3. Add the following variables:
+   - `OPENAI_API_KEY` - Your OpenAI API key
+   - `TAVILY_API_KEY` - Your Tavily API key for web search
+   - `REDIS_URL` - (Optional) Redis connection string for resumable streams
+
+**Important**: Without these environment variables, the application will return 500 errors when trying to send messages.
+
 ## How it works
 
 ### High level
