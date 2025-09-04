@@ -59,12 +59,24 @@ export async function readChat(id: string): Promise<ChatData> {
 
 export async function readAllChats(): Promise<ChatData[]> {
   const chatDir = path.join(process.cwd(), '.chats');
-  const files = await readdir(chatDir, { withFileTypes: true });
-  return Promise.all(
-    files
-      .filter(file => file.isFile())
-      .map(async file => readChat(file.name.replace('.json', ''))),
-  );
+  
+  // Return empty array if directory doesn't exist (e.g., during build)
+  if (!existsSync(chatDir)) {
+    return [];
+  }
+  
+  try {
+    const files = await readdir(chatDir, { withFileTypes: true });
+    return Promise.all(
+      files
+        .filter(file => file.isFile())
+        .map(async file => readChat(file.name.replace('.json', ''))),
+    );
+  } catch (error) {
+    // Return empty array if there's any error reading the directory
+    console.warn('Could not read chats directory:', error);
+    return [];
+  }
 }
 
 async function getChatFile(id: string): Promise<string> {

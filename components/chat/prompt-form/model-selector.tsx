@@ -1,6 +1,4 @@
-import { ModelInfos, ModelType, getModelProvider } from "@repo/types";
 import { useEffect, useState } from "react";
-import { useModal } from "@/components/layout/modal-context";
 import {
   Popover,
   PopoverContent,
@@ -12,37 +10,32 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
-import { Box } from "lucide-react";
-import { useModels } from "@/hooks/chat/use-models";
-import { useApiKeys, useApiKeyValidation } from "@/hooks/api-keys/use-api-keys";
+
+// Simple model types for ai-sdk-deep-research
+type ModelType = string;
+
+interface ModelInfo {
+  id: string;
+  name: string;
+  provider: string;
+}
+
+// Available models for ai-sdk-deep-research
+const AVAILABLE_MODELS: ModelInfo[] = [
+  { id: 'gpt-4o', name: 'GPT-4o', provider: 'openai' },
+  { id: 'gpt-4o-mini', name: 'GPT-4o Mini', provider: 'openai' },
+  { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet', provider: 'anthropic' },
+  { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku', provider: 'anthropic' },
+];
 
 export function ModelSelector({
   selectedModel,
   handleSelectModel,
 }: {
-  selectedModel: ModelType | null;
-  handleSelectModel: (model: ModelType | null) => void;
+  selectedModel: string;
+  handleSelectModel: (model: string) => void;
 }) {
   const [isModelSelectorOpen, setIsModelSelectorOpen] = useState(false);
-  const { openSettingsModal } = useModal();
-
-  const { data: availableModels = [] } = useModels();
-  const { data: apiKeys } = useApiKeys();
-  const { data: validationState } = useApiKeyValidation();
-
-  // Filter models based on valid API keys only
-  const filteredModels = availableModels.filter((model) => {
-    const provider = getModelProvider(model.id as ModelType);
-
-    // Check if we have a valid API key for this provider
-    const hasKey = !!apiKeys?.[provider];
-
-    // If validation state is not available, assume valid if we have a key
-    // This prevents filtering out all models when validation is still loading
-    const isValid = validationState?.[provider]?.isValid !== false;
-
-    return hasKey && isValid;
-  });
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -56,6 +49,8 @@ export function ModelSelector({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  const selectedModelInfo = AVAILABLE_MODELS.find(m => m.id === selectedModel);
+
   return (
     <Popover open={isModelSelectorOpen} onOpenChange={setIsModelSelectorOpen}>
       <Tooltip>
@@ -67,9 +62,7 @@ export function ModelSelector({
               className="text-muted-foreground hover:bg-accent px-2 font-normal"
             >
               <span>
-                {selectedModel
-                  ? (ModelInfos[selectedModel]?.name ?? String(selectedModel))
-                  : "No Model Selected"}
+                {selectedModelInfo?.name || selectedModel || "GPT-4o"}
               </span>
             </Button>
           </PopoverTrigger>
@@ -85,35 +78,21 @@ export function ModelSelector({
         className="flex flex-col gap-0.5 overflow-hidden rounded-lg p-0"
       >
         <div className="flex flex-col gap-0.5 rounded-lg p-1.5">
-          {filteredModels.length > 0 ? (
-            filteredModels.map((model) => (
-              <Button
-                key={model.id}
-                size="sm"
-                variant="ghost"
-                className="hover:bg-accent justify-start font-normal"
-                onClick={() => handleSelectModel(model.id as ModelType)}
-              >
-                <span>{model.name}</span>
-              </Button>
-            ))
-          ) : (
-            <div className="text-muted-foreground p-2 text-left text-sm">
-              No models available. Configure your API keys to begin using
-              Shadow.
-            </div>
-          )}
+          {AVAILABLE_MODELS.map((model) => (
+            <Button
+              key={model.id}
+              size="sm"
+              variant="ghost"
+              className="hover:bg-accent justify-start font-normal"
+              onClick={() => {
+                handleSelectModel(model.id);
+                setIsModelSelectorOpen(false);
+              }}
+            >
+              <span>{model.name}</span>
+            </Button>
+          ))}
         </div>
-        <button
-          className="hover:bg-sidebar-accent flex h-9 w-full cursor-pointer items-center gap-2 border-t px-3 text-sm transition-colors"
-          onClick={() => {
-            setIsModelSelectorOpen(false);
-            openSettingsModal("models");
-          }}
-        >
-          <Box className="size-4" />
-          <span>Manage API Keys</span>
-        </button>
       </PopoverContent>
     </Popover>
   );
