@@ -6,6 +6,7 @@ import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { useEffect, useRef } from 'react';
 import ChatInput from './chat-input';
+import { AdaptedPromptForm } from '@/components/chat/prompt-form/AdaptedPromptForm';
 import Message from './message';
 import { useDataStream } from '@/components/data-stream-provider';
 import {
@@ -24,6 +25,7 @@ export default function ChatComponent({
   resume?: boolean;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const useNewInput = true; // Feature flag for testing
 
   const { setDataStream } = useDataStream();
 
@@ -80,27 +82,51 @@ export default function ChatComponent({
   }, []);
 
   return (
-    <div className="flex flex-col py-24 mx-auto w-full max-w-3xl stretch">
-      <Conversation>
-        <ConversationContent>
-          {messages.map(message => (
-            <Message key={message.id} message={message} />
-          ))}
-        </ConversationContent>
-        <ConversationScrollButton />
-      </Conversation>
+    <div className="flex flex-col h-full">
+      {/* Messages area with padding for fixed input */}
+      <div className="flex-1 overflow-hidden">
+        <div className="flex flex-col py-24 mx-auto w-full max-w-3xl stretch pb-32">
+          <Conversation>
+            <ConversationContent>
+              {messages.map(message => (
+                <Message key={message.id} message={message} />
+              ))}
+            </ConversationContent>
+            <ConversationScrollButton />
+          </Conversation>
+        </div>
+      </div>
 
-      <ChatInput
-        status={status}
-        onSubmit={text => {
-          sendMessage({ text, metadata: { createdAt: Date.now() } });
+      {/* Fixed input at bottom */}
+      <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border">
+        <div className="mx-auto w-full max-w-3xl p-4">
+          {useNewInput ? (
+            <AdaptedPromptForm
+              status={status}
+              onSubmit={text => {
+                sendMessage({ text, metadata: { createdAt: Date.now() } });
 
-          if (isNewChat) {
-            window.history.replaceState(null, '', `/chat/${chatData.id}`);
-          }
-        }}
-        inputRef={inputRef}
-      />
+                if (isNewChat) {
+                  window.history.replaceState(null, '', `/chat/${chatData.id}`);
+                }
+              }}
+              inputRef={inputRef}
+            />
+          ) : (
+            <ChatInput
+              status={status}
+              onSubmit={text => {
+                sendMessage({ text, metadata: { createdAt: Date.now() } });
+
+                if (isNewChat) {
+                  window.history.replaceState(null, '', `/chat/${chatData.id}`);
+                }
+              }}
+              inputRef={inputRef}
+            />
+          )}
+        </div>
+      </div>
     </div>
   );
 }
