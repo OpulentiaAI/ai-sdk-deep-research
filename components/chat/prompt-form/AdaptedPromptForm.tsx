@@ -53,18 +53,17 @@ export function AdaptedPromptForm({
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto">
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleSubmit(e);
-        }}
-        className={cn(
-          'bg-background border-border relative w-full rounded border p-1.5 shadow-lg',
-          'transition-all duration-200',
-          disabled && 'opacity-75'
-        )}
-      >
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        handleSubmit(e);
+      }}
+      className={cn(
+        'bg-background border-border relative w-full rounded border p-1.5 shadow-lg',
+        'transition-all duration-200',
+        disabled && 'opacity-75'
+      )}
+    >
         {/* Textarea */}
         <Textarea
           ref={textareaRef}
@@ -162,6 +161,5 @@ export function AdaptedPromptForm({
           </div>
         </div>
       </form>
-    </div>
   );
 }
