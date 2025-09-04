@@ -6,6 +6,7 @@ import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { useEffect, useRef } from 'react';
 import ChatInput from './chat-input';
+import { AdaptedPromptForm } from '@/components/chat/prompt-form/AdaptedPromptForm';
 import Message from './message';
 import { useDataStream } from '@/components/data-stream-provider';
 import {
@@ -24,6 +25,7 @@ export default function ChatComponent({
   resume?: boolean;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const useNewInput = true; // Feature flag for testing
 
   const { setDataStream } = useDataStream();
 
@@ -90,17 +92,31 @@ export default function ChatComponent({
         <ConversationScrollButton />
       </Conversation>
 
-      <ChatInput
-        status={status}
-        onSubmit={text => {
-          sendMessage({ text, metadata: { createdAt: Date.now() } });
+      {useNewInput ? (
+        <AdaptedPromptForm
+          status={status}
+          onSubmit={text => {
+            sendMessage({ text, metadata: { createdAt: Date.now() } });
 
-          if (isNewChat) {
-            window.history.replaceState(null, '', `/chat/${chatData.id}`);
-          }
-        }}
-        inputRef={inputRef}
-      />
+            if (isNewChat) {
+              window.history.replaceState(null, '', `/chat/${chatData.id}`);
+            }
+          }}
+          inputRef={inputRef}
+        />
+      ) : (
+        <ChatInput
+          status={status}
+          onSubmit={text => {
+            sendMessage({ text, metadata: { createdAt: Date.now() } });
+
+            if (isNewChat) {
+              window.history.replaceState(null, '', `/chat/${chatData.id}`);
+            }
+          }}
+          inputRef={inputRef}
+        />
+      )}
     </div>
   );
 }

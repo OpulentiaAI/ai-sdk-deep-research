@@ -1,6 +1,7 @@
 import { ArtifactProvider } from '@/components/use-artifact';
 import './globals.css';
 import { DataStreamProvider } from '@/components/data-stream-provider';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import Link from 'next/link';
 import { readAllChats } from '@util/chat-store';
 import type { Metadata } from 'next';
@@ -23,8 +24,9 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body>
-        <DataStreamProvider>
-          <ArtifactProvider>
+        <TooltipProvider>
+          <DataStreamProvider>
+            <ArtifactProvider>
             <div className="flex min-h-screen">
               <aside className="w-64 shrink-0 border-r p-4 space-y-3">
                 <div className="flex items-center justify-between">
@@ -46,8 +48,9 @@ export default async function RootLayout({
               </aside>
               <main className="flex-1 min-w-0">{children}</main>
             </div>
-          </ArtifactProvider>
-        </DataStreamProvider>
+            </ArtifactProvider>
+          </DataStreamProvider>
+        </TooltipProvider>
       </body>
     </html>
   );
